@@ -17,7 +17,11 @@ export const sendMessage = async (
   userName: string,
   text: string
 ): Promise<void> => {
-  const messagesRef = ref(database, "messages");
+  if (!database) {
+    throw new Error("Firebase database is not initialized. Please check your environment variables.");
+  }
+
+  const messagesRef = ref(database!, "messages");
   const newMessageRef = push(messagesRef);
 
   const message: Message = {
@@ -36,7 +40,12 @@ export const subscribeToMessages = (
   callback: (messages: Message[]) => void,
   limit: number = 100
 ): (() => void) => {
-  const messagesRef = ref(database, "messages");
+  if (!database) {
+    console.error("Firebase database is not initialized");
+    return () => {}; // Return empty unsubscribe function
+  }
+
+  const messagesRef = ref(database!, "messages");
   const messagesQuery = query(
     messagesRef,
     orderByChild("groupId"),
@@ -69,8 +78,13 @@ export const getMessageHistory = async (
   groupId: string,
   limit: number = 100
 ): Promise<Message[]> => {
+  if (!database) {
+    console.error("Firebase database is not initialized");
+    return [];
+  }
+
   return new Promise((resolve) => {
-    const messagesRef = ref(database, "messages");
+    const messagesRef = ref(database!, "messages");
     const messagesQuery = query(
       messagesRef,
       orderByChild("groupId"),

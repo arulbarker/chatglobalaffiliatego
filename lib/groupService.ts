@@ -10,7 +10,11 @@ export const findOrCreateGroup = async (
   latitude?: number,
   longitude?: number
 ): Promise<string> => {
-  const groupsRef = ref(database, "groups");
+  if (!database) {
+    throw new Error("Firebase database is not initialized. Please check your environment variables.");
+  }
+
+  const groupsRef = ref(database!, "groups");
   const snapshot = await get(groupsRef);
 
   if (snapshot.exists()) {
@@ -29,7 +33,7 @@ export const findOrCreateGroup = async (
 
         if (distance <= DISTANCE_THRESHOLD_KM) {
           // Update member count
-          await update(ref(database, `groups/${groupId}`), {
+          await update(ref(database!, `groups/${groupId}`), {
             memberCount: (group.memberCount || 0) + 1,
           });
           return groupId;
@@ -41,7 +45,7 @@ export const findOrCreateGroup = async (
 
         if (normalizedInputLocation === normalizedGroupLocation) {
           // Update member count
-          await update(ref(database, `groups/${groupId}`), {
+          await update(ref(database!, `groups/${groupId}`), {
             memberCount: (group.memberCount || 0) + 1,
           });
           return groupId;
@@ -51,7 +55,7 @@ export const findOrCreateGroup = async (
   }
 
   // Jika tidak ada group yang cocok, buat group baru
-  const newGroupRef = push(ref(database, "groups"));
+  const newGroupRef = push(ref(database!, "groups"));
   const newGroupId = newGroupRef.key!;
 
   const newGroup: ChatGroup = {
@@ -68,7 +72,12 @@ export const findOrCreateGroup = async (
 };
 
 export const getGroupInfo = async (groupId: string): Promise<ChatGroup | null> => {
-  const groupRef = ref(database, `groups/${groupId}`);
+  if (!database) {
+    console.error("Firebase database is not initialized");
+    return null;
+  }
+
+  const groupRef = ref(database!, `groups/${groupId}`);
   const snapshot = await get(groupRef);
 
   if (snapshot.exists()) {
@@ -79,7 +88,12 @@ export const getGroupInfo = async (groupId: string): Promise<ChatGroup | null> =
 };
 
 export const decrementGroupMemberCount = async (groupId: string): Promise<void> => {
-  const groupRef = ref(database, `groups/${groupId}`);
+  if (!database) {
+    console.error("Firebase database is not initialized");
+    return;
+  }
+
+  const groupRef = ref(database!, `groups/${groupId}`);
   const snapshot = await get(groupRef);
 
   if (snapshot.exists()) {
