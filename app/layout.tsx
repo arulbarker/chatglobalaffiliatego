@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Location Chat App",
-  description: "Chat with people near your location",
+  title: "Chat Global Indonesia",
+  description: "Chat global dengan orang-orang dari lokasi yang sama di Indonesia",
 };
 
 export default function RootLayout({

@@ -1,55 +1,32 @@
 import { ref, get, set, update, push } from "firebase/database";
 import { database } from "./firebase";
 import { ChatGroup } from "@/types";
-import { normalizeLocationName, calculateDistance } from "./locationService";
-
-const DISTANCE_THRESHOLD_KM = 50; // Jarak maksimum untuk dianggap lokasi yang sama (dalam km)
+import { normalizeLocationName } from "./locationService";
 
 export const findOrCreateGroup = async (
-  location: string,
-  latitude?: number,
-  longitude?: number
+  location: string
 ): Promise<string> => {
   if (!database) {
     throw new Error("Firebase database is not initialized. Please check your environment variables.");
   }
 
+  const normalizedInputLocation = normalizeLocationName(location);
   const groupsRef = ref(database!, "groups");
   const snapshot = await get(groupsRef);
 
   if (snapshot.exists()) {
     const groups = snapshot.val() as Record<string, ChatGroup>;
 
-    // Cari group dengan lokasi yang sama atau terdekat
+    // Cari group dengan lokasi yang sama (exact match)
     for (const [groupId, group] of Object.entries(groups)) {
-      // Jika ada koordinat, gunakan jarak untuk matching
-      if (latitude && longitude && group.latitude && group.longitude) {
-        const distance = calculateDistance(
-          latitude,
-          longitude,
-          group.latitude,
-          group.longitude
-        );
+      const normalizedGroupLocation = normalizeLocationName(group.location);
 
-        if (distance <= DISTANCE_THRESHOLD_KM) {
-          // Update member count
-          await update(ref(database!, `groups/${groupId}`), {
-            memberCount: (group.memberCount || 0) + 1,
-          });
-          return groupId;
-        }
-      } else {
-        // Jika tidak ada koordinat, match berdasarkan nama lokasi
-        const normalizedInputLocation = normalizeLocationName(location);
-        const normalizedGroupLocation = normalizeLocationName(group.location);
-
-        if (normalizedInputLocation === normalizedGroupLocation) {
-          // Update member count
-          await update(ref(database!, `groups/${groupId}`), {
-            memberCount: (group.memberCount || 0) + 1,
-          });
-          return groupId;
-        }
+      if (normalizedInputLocation === normalizedGroupLocation) {
+        // Update member count
+        await update(ref(database!, `groups/${groupId}`), {
+          memberCount: (group.memberCount || 0) + 1,
+        });
+        return groupId;
       }
     }
   }
@@ -61,8 +38,6 @@ export const findOrCreateGroup = async (
   const newGroup: ChatGroup = {
     id: newGroupId,
     location,
-    latitude,
-    longitude,
     memberCount: 1,
     createdAt: Date.now(),
   };
