@@ -29,6 +29,9 @@ yarn-error.log*
 .env*.local
 .env
 
+# Firebase Admin SDK (sensitive)
+*firebase-adminsdk*.json
+
 # vercel
 .vercel
 

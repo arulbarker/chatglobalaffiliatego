@@ -1,5 +1,5 @@
-import { initializeApp, getApps } from "firebase/app";
-import { getDatabase } from "firebase/database";
+import { initializeApp, getApps, FirebaseApp } from "firebase/app";
+import { getDatabase, Database } from "firebase/database";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -11,8 +11,45 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-const database = getDatabase(app);
+// Validate required environment variables
+const requiredEnvVars = [
+  'NEXT_PUBLIC_FIREBASE_API_KEY',
+  'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN',
+  'NEXT_PUBLIC_FIREBASE_DATABASE_URL',
+  'NEXT_PUBLIC_FIREBASE_PROJECT_ID',
+  'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET',
+  'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
+  'NEXT_PUBLIC_FIREBASE_APP_ID',
+];
+
+const missingEnvVars = requiredEnvVars.filter(
+  (envVar) => !process.env[envVar]
+);
+
+if (missingEnvVars.length > 0 && typeof window !== 'undefined') {
+  console.error(
+    'Missing Firebase environment variables:',
+    missingEnvVars.join(', ')
+  );
+  console.error(
+    'Please check your .env.local file or Vercel environment variables.'
+  );
+}
+
+// Initialize Firebase only if all required variables are present
+let app: FirebaseApp | undefined;
+let database: Database | undefined;
+
+try {
+  if (missingEnvVars.length === 0) {
+    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+    database = getDatabase(app);
+  } else if (typeof window === 'undefined') {
+    // During build time, create a minimal config to avoid errors
+    console.warn('Firebase not initialized: Missing environment variables during build');
+  }
+} catch (error) {
+  console.error('Error initializing Firebase:', error);
+}
 
 export { app, database };
