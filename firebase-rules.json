@@ -1,0 +1,20 @@
+{
+  "rules": {
+    "groups": {
+      ".read": true,
+      ".write": true,
+      ".indexOn": ["location"],
+      "$groupId": {
+        ".validate": "newData.hasChildren(['id', 'location', 'memberCount', 'createdAt']) && newData.child('id').val() === $groupId && newData.child('memberCount').isNumber() && newData.child('createdAt').isNumber()"
+      }
+    },
+    "messages": {
+      ".read": "auth != null || true",
+      ".write": "auth != null || true",
+      ".indexOn": ["groupId", "timestamp"],
+      "$messageId": {
+        ".validate": "newData.hasChildren(['id', 'groupId', 'userName', 'text', 'timestamp']) && newData.child('id').val() === $messageId && newData.child('userName').isString() && newData.child('text').isString() && newData.child('text').val().length <= 1000 && newData.child('timestamp').isNumber()"
+      }
+    }
+  }
+}
