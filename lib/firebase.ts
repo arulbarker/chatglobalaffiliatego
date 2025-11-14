@@ -28,28 +28,48 @@ const missingEnvVars = requiredEnvVars.filter(
 
 if (missingEnvVars.length > 0 && typeof window !== 'undefined') {
   console.error(
-    'Missing Firebase environment variables:',
+    '❌ Missing Firebase environment variables:',
     missingEnvVars.join(', ')
-  );
-  console.error(
-    'Please check your .env.local file or Vercel environment variables.'
   );
 }
 
 // Initialize Firebase only if all required variables are present
 let app: FirebaseApp | undefined;
 let database: Database | undefined;
+let initError: Error | undefined;
 
 try {
   if (missingEnvVars.length === 0) {
+    console.log('🔄 Initializing Firebase...');
+    console.log('📍 Database URL:', process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL);
+
     app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
     database = getDatabase(app);
+
+    console.log('✅ Firebase initialized successfully');
+    console.log('✅ Database instance created');
   } else if (typeof window === 'undefined') {
-    // During build time, create a minimal config to avoid errors
-    console.warn('Firebase not initialized: Missing environment variables during build');
+    console.warn('⚠️ Firebase not initialized: Missing environment variables during build');
   }
-} catch (error) {
-  console.error('Error initializing Firebase:', error);
+} catch (error: any) {
+  console.error('❌ Error initializing Firebase:', error);
+  initError = error;
+
+  if (typeof window !== 'undefined') {
+    console.error('🔍 Firebase Config:', {
+      hasApiKey: !!firebaseConfig.apiKey,
+      hasAuthDomain: !!firebaseConfig.authDomain,
+      hasDatabaseURL: !!firebaseConfig.databaseURL,
+      hasProjectId: !!firebaseConfig.projectId,
+    });
+
+    if (error.message?.includes('database')) {
+      console.error(
+        '⚠️ Database initialization failed! ' +
+        'Pastikan Realtime Database sudah di-enable di Firebase Console.'
+      );
+    }
+  }
 }
 
-export { app, database };
+export { app, database, initError };
