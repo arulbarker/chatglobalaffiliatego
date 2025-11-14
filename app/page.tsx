@@ -3,6 +3,7 @@
 import { useState } from "react";
 import LoginForm from "@/components/LoginForm";
 import ChatRoom from "@/components/ChatRoom";
+import FirebaseDebug from "@/components/FirebaseDebug";
 
 export default function Home() {
   const [user, setUser] = useState<{ name: string; location: string; groupId: string } | null>(null);
@@ -22,6 +23,9 @@ export default function Home() {
       ) : (
         <ChatRoom user={user} onLogout={handleLogout} />
       )}
+
+      {/* Debug panel - remove this after fixing */}
+      <FirebaseDebug />
     </main>
   );
 }

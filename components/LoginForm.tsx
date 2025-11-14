@@ -73,6 +73,21 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
     setError("");
 
     try {
+      // Check if Firebase env vars are loaded
+      const hasEnvVars = Boolean(
+        process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
+        process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL &&
+        process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+      );
+
+      if (!hasEnvVars) {
+        throw new Error(
+          "⚠️ Firebase environment variables belum ter-load. " +
+          "Pastikan sudah menambahkan 7 environment variables di Vercel dan sudah REDEPLOY. " +
+          "Lihat panel debug di kanan bawah untuk detail."
+        );
+      }
+
       // Cari atau buat group berdasarkan lokasi (tanpa koordinat GPS)
       const groupId = await findOrCreateGroup(location);
 
